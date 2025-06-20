@@ -1,0 +1,93 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>ETL Flow Diagram</title>
+            <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .mermaid { text-align: center; }
+                .legend { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
+                .legend h3 { margin-top: 0; }
+                .legend-item { margin: 5px 0; }
+                .legend-color { display: inline-block; width: 20px; height: 3px; margin-right: 10px; vertical-align: middle; }
+            </style>
+        </head>
+        <body>
+            <div class="mermaid">
+            graph LR;
+  %% Node Styles
+  classDef source fill:#f5f5f5,stroke:#1f77b4,stroke-width:2px
+  classDef staging fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+  classDef transform fill:#f1f8e9,stroke:#4caf50,stroke-width:2px
+  classDef fact fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+  classDef dimension fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
+  classDef mart fill:#fce4ec,stroke:#e91e63,stroke-width:2px
+  classDef metrics fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px
+  classDef warehouse fill:#fbe9e7,stroke:#ff5722,stroke-width:2px
+  classDef audit fill:#efebe9,stroke:#795548,stroke-width:2px
+  classDef procedure fill:#e0f2f1,stroke:#009688,stroke-width:2px
+  classDef other fill:#fff,stroke:#333,stroke-width:1px
+
+  source_db_customers["source_db.customers"]
+  extracted_customers["extracted_customers<br/>• customer_id<br/>• first_name<br/>• last_name<br/>• email<br/>• created_at"]
+  cleaned_customers["cleaned_customers<br/>• customer_id<br/>• created_at<br/>---<br/>• FIRST_NAME (UPPER(TRIM(FIRST_NAME)))<br/>• LAST_NAME (UPPER(TRIM(LAST_NAME)))<br/>• EMAIL (LOWER(EMAIL))"]
+  deduplicated_customers["deduplicated_customers<br/>• *"]
+  joined_data["joined_data"]
+  warehouse_customer_orders["warehouse.customer_orders<br/>• order_id<br/>• customer_id<br/>• order_total<br/>• order_date<br/>---<br/>• CONCAT(first_name, ' ', last_name) (CONCAT(first_name, ' ', last_name))"]
+  staging_orders["staging.orders"]
+
+  source_db_customers -->|EXTRACT| extracted_customers
+  extracted_customers -->|TRANSFORM| cleaned_customers
+  cleaned_customers -->|TRANSFORM| deduplicated_customers
+  joined_data -->|LOAD| warehouse_customer_orders
+  staging_orders -->|TRANSFORM| extracted_customers
+  staging_orders -->|TRANSFORM| cleaned_customers
+  staging_orders -->|TRANSFORM| deduplicated_customers
+  source_db_customers -->|TRANSFORM| cleaned_customers
+  extracted_customers -->|TRANSFORM| deduplicated_customers
+  staging_orders -->|TRANSFORM| warehouse_customer_orders
+
+  class source_db_customers source
+  class extracted_customers transform
+  class cleaned_customers transform
+  class deduplicated_customers transform
+  class joined_data transform
+  class warehouse_customer_orders warehouse
+  class staging_orders staging
+            </div>
+            
+            <div class="legend">
+                <h3>Legend</h3>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #1f77b4;"></span>
+                    EXTRACT: Data extraction from source systems
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #2ca02c;"></span>
+                    TRANSFORM: Data transformation and cleaning
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #d62728;"></span>
+                    LOAD: Loading data into target tables
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #9467bd;"></span>
+                    MERGE: Slowly changing dimension updates
+                </div>
+            </div>
+            
+            <script>
+                mermaid.initialize({
+                    startOnLoad: true,
+                    theme: 'default',
+                    flowchart: {
+                        useMaxWidth: true,
+                        htmlLabels: true,
+                        curve: 'basis'
+                    }
+                });
+            </script>
+        </body>
+        </html>
+        
